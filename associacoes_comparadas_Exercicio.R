@@ -14,7 +14,5 @@ instagram_unifafire <- fread('https://raw.githubusercontent.com/hugoavmedeiros/c
 
 multi.cor(instagram_unifafire$Curtidas, instagram_unifafire$Comentários)
 
-
-
-#plot(instagram_unifafire$Curtidas , instagram_unifafire$Comentários) # Plotar o gráfico
+plot(instagram_unifafire$Curtidas , instagram_unifafire$Comentários) # Plotar o gráfico
 
