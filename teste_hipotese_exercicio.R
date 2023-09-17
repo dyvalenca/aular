@@ -11,11 +11,3 @@ t.test(enem_escola_pe_2019$nota, mu = 600.0)
 shapiro.test(enem_escola_pe_2019$nota)
 
 hist(enem_escola_pe_2019$nota)
-
-shapiro.test((enem_escola_pe_2019$nota - min(enem_escola_pe_2019$nota)) / (max(enem_escola_pe_2019$nota) - min(enem_escola_pe_2019$nota)))
-
-hist((enem_escola_pe_2019$nota - min(enem_escola_pe_2019$nota)) / (max(enem_escola_pe_2019$nota) - min(enem_escola_pe_2019$nota)))
-
-# LEITURA PARA TESTE DE FREQUÊNCIAS 
-milsa <- fread("http://www.leg.ufpr.br/~paulojus/dados/milsa.dat")
-chisq.test(milsa$civil, milsa$instrucao)
