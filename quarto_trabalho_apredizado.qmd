@@ -1,0 +1,152 @@
+---
+title: "Trabalho"
+format: 
+  html: 
+    theme: pulse
+editor: visual
+title-block-banner: true 
+---
+
+## Dados do Corinthians em jogos da Neo Química Arena
+
+Dados do Corinthians em jogos na Neo Química Arena que foi inaugurada em 2014.
+
+**Base de dados:**
+
+```{r}
+#| echo: false
+#| warning: false
+#| include: false
+
+### PACOTES ###
+pacman::p_load(
+  #ETL
+  data.table, dplyr, lubridate, tidyr,
+  # Gráficos
+  GGally, ggcorrplot, ggplot2, gt, gtExtras, gtsummary, plotly, caret, rattle,
+  # Renderização
+  kableExtra
+)
+
+### ETL ###
+planilha_corinthians <- fread('https://docs.google.com/spreadsheets/d/e/2PACX-1vQ3nISFGwr857_nWFhkppH_D8fMwQ35o3s_WxbBKRfI-6ToiT78aVVirU1VPf2ilRv8Qlh6xRBPOY1e/pub?gid=0&single=true&output=csv')
+
+```
+
+```{r}
+#| echo: false
+#| warning: false
+
+print(planilha_corinthians)
+```
+
+**Gols pró x Gols contra**
+
+```{r}
+#| echo: false
+#| warning: false
+
+# Calcular a soma do publico por ano
+grafico3 <- planilha_corinthians
+
+vGols <- sum(grafico3$`GOLS PRO`)
+vGolsC <- sum(grafico3$`GOLS CONTRA`)
+
+dados <- c(vGols, vGolsC)
+rotulos <- c("Gols pro", "Gols contra")
+
+# Criar um gráfico de pizza
+# pie(dados, labels=rotulos, main="Gráfico de Pizza")
+
+library(RColorBrewer)
+par(bg="#FFFFFF") 
+#display.brewer.all()
+COR<-brewer.pal(3,"Blues")
+#COR
+
+library(plotrix)
+pieval<-c(vGols,vGolsC)
+pielabels<-
+  c("Gols","Gols contra")
+pielabels2=paste(pielabels,"\n",pieval,sep="")
+pie3D(pieval,radius=0.95,labels=pielabels2,explode=0.1,main="Gráfico de Pizza \n Gols x Gols contra",
+  col=COR)
+```
+
+**Total de público por ano.**
+
+```{r}
+#| echo: false
+#| warning: false
+
+# Calcular a soma do publico por ano
+grafico1 <- planilha_corinthians
+soma_PUBLICO <- aggregate(PUBLICO ~ ANO, grafico1, sum)
+
+# Criar o gráfico de linha
+grafico <- ggplot(data = soma_PUBLICO, aes(x = ANO, y = PUBLICO)) +
+  geom_line() +
+  labs(title = "Soma de Público por ano",
+       x = "Ano",
+       y = "Soma de Público")
+
+# Adicionar rótulos de dados
+grafico + geom_text(aes(label = PUBLICO), hjust = -0.2, vjust = 0.5, size = 3)
+
+```
+
+**Total de renda por ano.**
+
+```{r}
+#| echo: false
+#| warning: false
+
+# Calcular a soma do publico por ano
+grafico2 <- planilha_corinthians
+soma_RENDA <- aggregate(RENDA ~ ANO, grafico2, sum)
+
+# Criar o gráfico de linha
+grafico <- ggplot(data = soma_RENDA, aes(x = ANO, y = RENDA)) +
+  geom_line() +
+  labs(title = "Soma de renda por ano",
+       x = "Ano",
+       y = "Soma de renda")
+
+# Adicionar rótulos de dados
+grafico + geom_text(aes(label = RENDA), hjust = -0.2, vjust = 0.5, size = 3)
+```
+
+**Correlação de Público e Renda.**
+
+```{r}
+#| echo: false
+#| warning: false
+
+base_corre <- planilha_corinthians %>% select(c(PUBLICO,RENDA)) %>% filter(RENDA > 0)
+
+grafico_corre <- base_corre %>% 
+  ggplot(aes(x=PUBLICO, y=RENDA)) + 
+  geom_point() + # cria os pontos
+  geom_smooth() # cria a surva de associação
+ggplotly(grafico_corre) # torna o gráfico interativo
+```
+
+**Desenho da árvore**
+
+```{r}
+#| echo: false
+#| warning: false
+
+# Pré-processamento
+particaoCorre = createDataPartition(1:nrow(base_corre), p=.70) # cria a partição 70-30
+
+treinoCorre = base_corre[particaoCorre$Resample1, ] # treino é a base de aprendizagem a base q ela usa pra aprender
+
+MTPUBREN <- train(
+  PUBLICO ~ RENDA , 
+  data = treinoCorre, 
+  method = "rpart", 
+  trControl = trainControl(method = "cv"))
+
+fancyRpartPlot(MTPUBREN$finalModel)
+```
