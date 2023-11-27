@@ -1,0 +1,84 @@
+---
+title: "Trabalho"
+format: 
+  html: 
+    theme: pulse
+editor: visual
+title-block-banner: true 
+---
+
+## Dados do Corinthians em jogos da Neo Química Arena
+
+Dados do Corinthians em jogos na Neo Química Arena que foi inaugurada em 2014. Podendo ser filtrados por Ano e adversário.
+
+
+```{r}
+#| echo: false
+#| warning: false
+#| include: false
+
+### PACOTES ###
+pacman::p_load(
+  #ETL
+  data.table, dplyr, lubridate, tidyr,
+  # Gráficos
+  GGally, ggcorrplot, ggplot2, gt, gtExtras, gtsummary, plotly, caret, rattle,
+  # Renderização
+  kableExtra,
+  
+  ##
+  crosstalk, d3scatter, DT, leaflet
+)
+
+### ETL ###
+planilha_corinthians <- fread('https://docs.google.com/spreadsheets/d/e/2PACX-1vQ3nISFGwr857_nWFhkppH_D8fMwQ35o3s_WxbBKRfI-6ToiT78aVVirU1VPf2ilRv8Qlh6xRBPOY1e/pub?gid=0&single=true&output=csv')
+
+planilha_corinthians_gols <- fread('https://docs.google.com/spreadsheets/d/e/2PACX-1vQ3nISFGwr857_nWFhkppH_D8fMwQ35o3s_WxbBKRfI-6ToiT78aVVirU1VPf2ilRv8Qlh6xRBPOY1e/pub?gid=2078954123&single=true&output=csv')
+
+dados_combinados <- merge(planilha_corinthians, planilha_corinthians_gols, by = "DATA")
+```
+
+```{r}
+#| echo: false
+#| warning: false
+
+#print(planilha_corinthians)
+
+sd <- SharedData$new(dados_combinados[sample(nrow(dados_combinados)),])
+```
+
+
+```{r}
+#| echo: false
+#| warning: false
+
+filter_slider("f_ano", "Ano", sd, column=~ANO, step=1, width=600)
+# dados_10_primeiros_shared <- sd$data %>% head(10)
+#ordem <- c("GOL", "JOGADOR GOL")
+
+filter_select("f_adversario", "Adversários", sd, ~ADVERSARIO)
+
+bscols(
+  plot_ly(sd,     
+          #y = ~GOL, 
+          #x = ~`JOGADOR GOL`, 
+          x = ~GOL, 
+          y = ~`JOGADOR GOL`, 
+          type = 'bar' , 
+          # orientation = 'h',
+          name = 'Jogador'
+         #,text = ~GOL, textposition = 'outside'
+          ) %>%
+    
+  layout(title = 'Artileiros',
+         height = 1200,
+         yaxis = list(tickfont = list( size=8), categoryorder = 'total ascending')))
+
+
+
+bscols(  datatable(sd, extensions="Scroller", style="bootstrap", class="compact", width="100%",
+    options=list(deferRender=TRUE, scrollY=300, scroller=TRUE))
+)
+
+```
+
